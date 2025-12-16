@@ -1,20 +1,26 @@
 
 
 services:
-  # 🐍 Backend (FastAPI)
   backend:
     build: ./backend
     container_name: backend
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 
-    
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
     ports:
       - "8000:8000"
+
     environment:
-      - postgres:
-    depends_on:
-      - db
+      DB_HOST: pg-35318557-cuilahore-63ed.j.aivencloud.com
+      DB_PORT: 19969
+      DB_NAME: defaultdb
+      DB_USER: avnadmin
+      DB_PASSWORD: AVNS_OQ0K1gICnzak5iV_ukC
+
+    
+
     networks:
       - app-network
+
 
   
 
@@ -24,9 +30,9 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: 
-      POSTGRES_PASSWORD: 
-      POSTGRES_DB: 
+      POSTGRES_USER: avnadmin
+      POSTGRES_PASSWORD: AVNS_OQ0K1gICnzak5iV_ukC
+      POSTGRES_DB: defaultdb
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:

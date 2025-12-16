@@ -11,7 +11,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 #     raise ValueError("No DATABASE_URL set in environment variables")
 
 engine = create_engine(
-   
+   "postgresql://avnadmin:AVNS_OQ0K1gICnzak5iV_ukC@pg-35318557-cuilahore-63ed.j.aivencloud.com:19969/defaultdb?sslmode=require"
 )
 
 Base = declarative_base()

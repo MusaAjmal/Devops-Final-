@@ -38,4 +38,4 @@ another_fastapi_jwt_auth==0.1.6
 pytest==8.4.2
 pytest-asyncio==1.2.0
 pytest-cov==7.0.0
-httpx== 0.23.2
+httpx==0.23.2

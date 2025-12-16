@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from backend.main import app
 from backend.database import Base, get_db  # adjust path if needed
 
-
+DATABASE_URL = "postgresql://avnadmin:AVNS_OQ0K1gICnzak5iV_ukC@pg-35318557-cuilahore-63ed.j.aivencloud.com:19969/defaultdb?sslmode=require"
 # Create SQLAlchemy engine and session factory
 engine = create_engine(DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
