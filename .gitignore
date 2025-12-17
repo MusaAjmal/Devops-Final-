@@ -1,3 +1,12 @@
 __pycache__
 env
 .env
+.venv
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*.backup
+.terraform.lock.hcl
