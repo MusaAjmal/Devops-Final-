@@ -56,7 +56,7 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.AIVEN_DB_URL }}
       PYTHONPATH: ${{ github.workspace }}
-      ENVIRONMENT: test
+      ENVIRONMENT: lab_final
     steps:
       - uses: actions/checkout@v4
 
