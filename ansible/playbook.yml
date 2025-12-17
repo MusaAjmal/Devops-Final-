@@ -1,0 +1,88 @@
+---
+- name: AKS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  
+
+  vars:
+    namespace: demo-app
+    app_name: backend-app
+    image_name: musa56/devopsfinal-backend:latest
+
+    db_host: "pg-35318557-cuilahore-63ed.j.aivencloud.com"
+    db_port: "5432"
+    db_user: "avnadmin"
+    db_password: "AVNS_OQ0K1gICnzak5iV_ukC"
+    db_name: "defaultdb"
+
+  tasks:
+
+    - name: Create namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ namespace }}"
+        state: present
+
+    - name: Create PostgreSQL secret
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: postgres-secret
+            namespace: "{{ namespace }}"
+          type: Opaque
+          stringData:
+            DB_HOST: "{{ db_host }}"
+            DB_PORT: "{{ db_port }}"
+            DB_USER: "{{ db_user }}"
+            DB_PASSWORD: "{{ db_password }}"
+            DB_NAME: "{{ db_name }}"
+
+    - name: Deploy application
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ app_name }}"
+            namespace: "{{ namespace }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ app_name }}"
+            template:
+              metadata:
+                labels:
+                  app: "{{ app_name }}"
+              spec:
+                containers:
+                  - name: app
+                    image: "{{ image_name }}"
+                    ports:
+                      - containerPort: 80
+                    envFrom:
+                      - secretRef:
+                          name: postgres-secret
+
+    - name: Expose application
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ app_name }}"
+            namespace: "{{ namespace }}"
+          spec:
+            selector:
+              app: "{{ app_name }}"
+            ports:
+              - port: 80
+                targetPort: 80
+            type: LoadBalancer

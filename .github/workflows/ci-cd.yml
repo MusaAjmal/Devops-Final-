@@ -1,158 +1,114 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (Docker Desktop + Aiven DB)
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
-  # --------------------------
-  # 1️⃣ Build & Install
-  # --------------------------
-  build:
+
+  # -----------------------------
+  # 1️⃣ Build & Test
+  # -----------------------------
+  build-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        working-directory: ./backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
 
-  # --------------------------
-  # 2️⃣ Lint / Security Scan
-  # --------------------------
-  lint:
+      - name: Run Unit Tests
+        env:
+          DB_HOST: ${{ secrets.AIVEN_DB_HOST }}
+          DB_PORT: ${{ secrets.AIVEN_DB_PORT }}
+          DB_USER: ${{ secrets.AIVEN_DB_USER }}
+          DB_PASSWORD: ${{ secrets.AIVEN_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.AIVEN_DB_NAME }}
+        run: pytest
+
+  # -----------------------------
+  # 2️⃣ Lint & Security Scan
+  # -----------------------------
+  lint-security:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-test
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Install Linter & Security Tools
+        run: pip install flake8 bandit
 
-      - name: Install formatting and linting tools
-        run: |
-          pip install black flake8 bandit
+      - name: Run Lint
+        run: flake8 .
 
-      - name: Auto-format with Black
-        run: black .
-
-      - name: Run Bandit (security scan)
+      - name: Run Security Scan
         run: bandit -r .
 
-  # --------------------------
-  # 3️⃣ Test (with DB service)
-  # --------------------------
-  test:
+  # -----------------------------
+  # 3️⃣ Docker Build & Push
+  # -----------------------------
+  docker-build-push:
     runs-on: ubuntu-latest
-    needs: lint
-
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: avnadmin
-          POSTGRES_PASSWORD: AVNS_OQ0K1gICnzak5iV_ukC
-          POSTGRES_DB: defaultdb
-        ports:
-          - 19969:19969
-        options: >-
-          --health-cmd "pg_isready -U avnadmin"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      # ✅ Use Aiven DB or local test DB
-      DATABASE_URL: 
-      PYTHONPATH: ${{ github.workspace }}  # ✅ Fix import path
-      ENVIRONMENT: test
-
+    needs: lint-security
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        working-directory: ./backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio
-
-      - name: Wait for DB to be ready
-        run: sleep 10
-
-      - name: Run tests
-        run: pytest backend/tests -v --maxfail=1 --disable-warnings --tb=short --color=yes
-
-  # --------------------------
-  # 4️⃣ Build Docker Image
-  # --------------------------
-  docker_build:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image (test build)
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: false
-          tags: ${{ secrets.DOCKER_USERNAME }}pizza-delivery-api:latest
+      - name: Build Backend Docker Image
+        run: docker build -t yourusername/backend-app:latest ./backend
 
-  # --------------------------
-  # 5️⃣ Deploy to Docker Hub
-  # --------------------------
+      - name: Push Backend Docker Image
+        run: docker push yourusername/backend-app:latest
+
+  # -----------------------------
+  # 4️⃣ Deploy using kubectl (Docker Desktop / local K8s)
+  # -----------------------------
   deploy:
     runs-on: ubuntu-latest
-    needs: docker_build
-    if: github.ref == 'refs/heads/main'
+    needs: docker-build-push
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Set up Kubeconfig for Docker Desktop
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
 
-      - name: Build and push final Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/pizza-delivery-api:latest
-            ${{ secrets.DOCKER_USERNAME }}/pizza-delivery-api:${{ github.run_number }}
+      - name: Deploy to Kubernetes
+        run: kubectl apply -f k8s/
+
+  # -----------------------------
+  # 5️⃣ Post-Deploy Smoke Tests
+  # -----------------------------
+  smoke-tests:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for App to Start
+        run: sleep 15
+
+      - name: Run Smoke Tests
+        run: |
+          curl -f http://localhost:8000/health || exit 1
