@@ -129,6 +129,7 @@ jobs:
           echo "Applying Kubernetes manifests..."
           kubectl apply -f k8s/secrets/secrets.yaml
           kubectl apply -f k8s/configmaps/map-config.yaml
+          kubectl apply -f k8s/services/backend-service.yaml
           kubectl apply -f k8s/deployment/backend-deployment.yaml
           
           echo "Waiting for deployment to be created..."
