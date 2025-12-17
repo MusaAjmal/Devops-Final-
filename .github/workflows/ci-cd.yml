@@ -126,9 +126,8 @@ jobs:
 
       - name: Configure kubeconfig
         run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" > $KUBECONFIG
-          chmod 600 $KUBECONFIG
+         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
+         export KUBECONFIG=$HOME/.kube/config
 
       - name: Deploy backend with kubectl apply
         run: |
