@@ -79,6 +79,7 @@ jobs:
   # --------------------------
   docker:
     runs-on: ubuntu-latest
+    environment: lab_final
     needs: test
     if: github.ref == 'refs/heads/main'
     steps:
