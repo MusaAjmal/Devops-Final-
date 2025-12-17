@@ -160,9 +160,26 @@ jobs:
         with:
           python-version: '3.11'
 
+      - uses: azure/setup-kubectl@v3
+        with:
+          version: latest
+
+      - name: Configure kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > $KUBECONFIG
+          chmod 600 $KUBECONFIG
+
       - name: Install HTTP client
         run: pip install httpx
 
+      - name: Start Port Forward
+        run: |
+          kubectl port-forward svc/devopsfinal-backend 8000:80 -n default &
+          echo "Waiting for port-forward to be ready..."
+          sleep 5
+
       - name: Run smoke tests
+        env:
+          APP_URL: "http://localhost:8000"
         run: |
           python backend/tests/smoke_tests.py
