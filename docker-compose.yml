@@ -38,6 +38,26 @@ services:
     networks:
       - app-network
 
+  # 📊 Prometheus
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+
+  # 📈 Grafana
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
 # 🔗 Internal Docker network (auto handles container communication)
 networks:
   app-network:
