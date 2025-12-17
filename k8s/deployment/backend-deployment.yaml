@@ -1,20 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-app
-  namespace: demo-app
+  name: devopsfinal-backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backend-app
+      app: devopsfinal-backend
   template:
     metadata:
       labels:
-        app: backend-app
+        app: devopsfinal-backend
     spec:
       containers:
-        - name: backend
+        - name: devopsfinal-backend
           image: musa56/devopsfinal-backend:latest
           ports:
             - containerPort: 8000
