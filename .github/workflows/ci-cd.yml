@@ -127,6 +127,8 @@ jobs:
       - name: Update AKS deployment image
         run: |
           echo "Applying Kubernetes manifests..."
+          kubectl apply -f k8s/secrets/secrets.yaml
+          kubectl apply -f k8s/configmaps/map-config.yaml
           kubectl apply -f k8s/deployment/backend-deployment.yaml
           
           echo "Waiting for deployment to be created..."
