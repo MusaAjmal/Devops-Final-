@@ -153,6 +153,8 @@ jobs:
     needs: deploy
     if: github.ref == 'refs/heads/main'
     environment: lab_final
+    env:
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
     steps:
       - uses: actions/checkout@v4
 
