@@ -80,6 +80,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint-security
     steps:
+      - name: Check secrets
+        run: |
+          "echo 'Docker username: ${{ secrets.DOCKER_USERNAME }}"
+
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -95,8 +99,8 @@ jobs:
           context: backend
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/devopsfinal-backend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/devopsfinal-backend:${{ github.run_number }}
+            ${{ secrets.DOCKER_USERNAME }}/devopsfinal-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/devopsfinal-backend:${{ github.run_number }}
 
   # --------------------------
   # 5️⃣ Deploy to AKS
