@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
   # --------------------------
@@ -12,6 +12,7 @@ jobs:
   # --------------------------
   build:
     runs-on: ubuntu-latest
+    environment: lab_final
     steps:
       - uses: actions/checkout@v4
 
@@ -31,6 +32,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     needs: build
+    environment: lab_final
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +55,7 @@ jobs:
   lint-security:
     runs-on: ubuntu-latest
     needs: lint
+    environment: lab_final
     env:
       DATABASE_URL: ${{ secrets.AIVEN_DB_URL }}
       PYTHONPATH: ${{ github.workspace }}
@@ -79,9 +82,8 @@ jobs:
   docker-build-push:
     runs-on: ubuntu-latest
     needs: lint-security
+    environment: lab_final
     steps:
-      
-
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -107,6 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker-build-push
     if: github.ref == 'refs/heads/main'
+    environment: lab_final
     env:
       KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
     steps:
@@ -135,6 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy
     if: github.ref == 'refs/heads/main'
+    environment: lab_final
     steps:
       - uses: actions/checkout@v4
 
