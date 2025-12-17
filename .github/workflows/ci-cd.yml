@@ -52,7 +52,7 @@ jobs:
   # --------------------------
   # 3️⃣ Test
   # --------------------------
-  lint-security:
+  test:
     runs-on: ubuntu-latest
     needs: lint
     environment: lab_final
@@ -81,11 +81,11 @@ jobs:
   # --------------------------
   docker-build-push:
     runs-on: ubuntu-latest
-    needs: lint-security
+    needs: test
     environment: lab_final
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -126,9 +126,15 @@ jobs:
 
       - name: Update AKS deployment image
         run: |
+          echo "Checking current deployments..."
+          kubectl get deployments -n default
+
+          echo "Setting new image..."
           kubectl set image deployment/devopsfinal-backend \
-            devopsfinal-backend=${{ secrets.DOCKERHUB_USERNAME }}/devopsfinal-backend:${{ github.run_number }} \
+            devopsfinal-backend=${{ secrets.DOCKER_USERNAME }}/devopsfinal-backend:${{ github.run_number }} \
             -n default
+
+          echo "Verifying rollout..."
           kubectl rollout status deployment/devopsfinal-backend -n default
 
   # --------------------------
@@ -141,6 +147,10 @@ jobs:
     environment: lab_final
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Install HTTP client
         run: pip install httpx
