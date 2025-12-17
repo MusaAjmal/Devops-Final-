@@ -1,12 +1,10 @@
-__pycache__
-env
-.env
-.venv
+# Terraform local files
 .terraform/
 *.tfstate
-*.tfstate.*
-crash.log
-override.tf
-override.tf.json
-*.backup
+*.tfstate.backup
 .terraform.lock.hcl
+
+# Terraform provider binaries (Windows, Linux, Mac)
+*.exe
+*.zip
+terraform-provider-*
