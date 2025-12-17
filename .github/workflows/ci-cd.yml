@@ -115,6 +115,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker
     if: github.ref == 'refs/heads/main'
+    env:
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
     steps:
       - uses: actions/checkout@v4
 
@@ -125,8 +127,13 @@ jobs:
       - name: Configure kubeconfig
         run: |
           mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
-          export KUBECONFIG=$HOME/.kube/config
+          echo "${{ secrets.KUBE_CONFIG }}" > $KUBECONFIG
+          chmod 600 $KUBECONFIG
+
+      - name: Ensure deployment exists
+        run: |
+          kubectl get deployment devopsfinal-backend || \
+          kubectl create deployment devopsfinal-backend --image=musa56/devopsfinal-backend:latest
 
       - name: Deploy backend
         run: |
