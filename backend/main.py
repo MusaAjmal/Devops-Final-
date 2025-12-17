@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 from auth_routes import auth_router
 from order_routes import order_router
 from another_fastapi_jwt_auth import AuthJWT
@@ -9,6 +10,8 @@ from fastapi.routing import APIRoute
 from fastapi.openapi.utils import get_openapi
 
 app = FastAPI()
+
+Instrumentator().instrument(app).expose(app)
 
 @app.get("/")
 def health_check():
