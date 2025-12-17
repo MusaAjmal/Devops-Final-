@@ -130,15 +130,32 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG }}" > $KUBECONFIG
           chmod 600 $KUBECONFIG
 
-      - name: Ensure deployment exists
+      - name: Deploy backend with kubectl apply
         run: |
-          kubectl get deployment devopsfinal-backend || \
-          kubectl create deployment devopsfinal-backend --image=musa56/devopsfinal-backend:latest
+          # Create a manifest file dynamically
+          cat <<EOF > backend-deployment.yaml
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: devopsfinal-backend
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: devopsfinal-backend
+            template:
+              metadata:
+                labels:
+                  app: devopsfinal-backend
+              spec:
+                containers:
+                  - name: devopsfinal-backend
+                    image: musa56/devopsfinal-backend:${{ github.run_number }}
+                    ports:
+                      - containerPort: 8000
+          EOF
 
-      - name: Deploy backend
-        run: |
-          kubectl set image deployment/devopsfinal-backend \
-            devopsfinal-backend=musa56/devopsfinal-backend:${{ github.run_number }}
+          kubectl apply -f backend-deployment.yaml
           kubectl rollout status deployment/devopsfinal-backend
 
   # --------------------------
