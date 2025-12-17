@@ -82,7 +82,7 @@ jobs:
     steps:
       - name: Check secrets
         run: |
-          "echo 'Docker username: ${{ secrets.DOCKER_USERNAME }}"
+          "echo Docker username: ${{ secrets.DOCKER_USERNAME }}"
 
       - name: Checkout Code
         uses: actions/checkout@v3
