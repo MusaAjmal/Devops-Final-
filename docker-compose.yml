@@ -10,11 +10,13 @@ services:
       - "8000:8000"
 
     environment:
-      DB_HOST: pg-35318557-cuilahore-63ed.j.aivencloud.com
-      DB_PORT: 19969
+      DB_HOST: db
+      DB_PORT: 5432
       DB_NAME: defaultdb
       DB_USER: avnadmin
       DB_PASSWORD: AVNS_OQ0K1gICnzak5iV_ukC
+      # DB_HOST: pg-35318557-cuilahore-63ed.j.aivencloud.com
+      # DB_PORT: 19969
 
     
 
@@ -55,6 +57,8 @@ services:
     container_name: grafana
     ports:
       - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       - app-network
 
